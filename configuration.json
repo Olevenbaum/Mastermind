@@ -1,0 +1,20 @@
+{
+  "all_colors": ["black", "blue", "green", "red", "white", "yellow"],
+  "color_code": {
+    "standard_color": "white",
+    "important_color": "blue",
+    "error_color": "red",
+    "option_color": "green"
+  },
+  "preferences": {
+    "minimal_number_of_elements": 3,
+    "maximal_number_of_elements": 6,
+    "standard_length_of_options": 2,
+    "standard_length_of_settings": 25
+  },
+  "standard_settings": {
+    "number_of_elements": 5,
+    "number_of_attempts": 15,
+    "double_colors": false
+  }
+}
