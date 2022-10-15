@@ -1,20 +1,27 @@
 {
   "all_colors": ["black", "blue", "green", "red", "white", "yellow"],
   "color_code": {
-    "standard_color": "white",
-    "important_color": "blue",
     "error_color": "red",
-    "option_color": "green"
+    "important_color": "blue",
+    "option_color": "green",
+    "right_color_color": "black",
+    "right_position_color": "white",
+    "standard_color": "white"
   },
   "preferences": {
-    "minimal_number_of_elements": 3,
+    "length_if_endless_attempts": 3,
     "maximal_number_of_elements": 6,
-    "standard_length_of_options": 2,
-    "standard_length_of_settings": 25
+    "minimal_number_of_elements": 3,
+    "signs": {
+      "color_sign": "███",
+      "horizontal_divider": "|",
+      "vertical_divider": "="
+    },
+    "standard_length": 2
   },
   "standard_settings": {
-    "number_of_elements": 5,
+    "double_colors": false,
     "number_of_attempts": 15,
-    "double_colors": false
+    "number_of_elements": 5
   }
 }

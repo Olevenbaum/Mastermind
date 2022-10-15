@@ -35,28 +35,24 @@ class Main
     def initialize
         @clear_terminal = get_os
         @configuration = JSON.load File.open "./configuration.json"
-        @colors = @configuration['all_colors']
-        @color_code = @configuration['color_code']
         @settings = JSON.load File.open "./settings.json"
     end
     def main
-        system "#{@clear_terminal}"
-        puts
+        clear_terminal
         show_menu
     end
     def show_menu
         possible_input = Array(1..4)
         loop do
-            system "#{@clear_terminal}"
+            clear_terminal
+            puts print_color "Welcome to Mastermind!", @configuration['color_code']['important_color']
             puts
-            puts print_color "Welcome to Mastermind!", @color_code['important_color']
+            puts print_color "Please insert the number of the option you want to choose:", @configuration['color_code']['standard_color']
             puts
-            puts print_color "Please insert the number of the option you want to choose:", @color_code['standard_color']
-            puts
-            puts print_color "#{possible_input[0].to_s.ljust @configuration['preferences']['standard_length_of_options']}: Start new game", @color_code['option_color']
-            puts print_color "#{possible_input[1].to_s.ljust @configuration['preferences']['standard_length_of_options']}: Open settings", @color_code['option_color']
-            puts print_color "#{possible_input[2].to_s.ljust @configuration['preferences']['standard_length_of_options']}: Show documentation", @color_code['option_color']
-            puts print_color "#{possible_input[-1].to_s.ljust @configuration['preferences']['standard_length_of_options']}: Exit game", @color_code['option_color']
+            puts print_color "#{add_length "f", possible_input[0], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Start new game", @configuration['color_code']['option_color']
+            puts print_color "#{add_length "f", possible_input[1], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Open settings", @configuration['color_code']['option_color']
+            puts print_color "#{add_length "f", possible_input[2], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Show documentation", @configuration['color_code']['option_color']
+            puts print_color "#{add_length "f", possible_input[-1], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Exit game", @configuration['color_code']['option_color']
             puts
             case get_user_input "i", possible_input
             when possible_input[0]
@@ -71,97 +67,161 @@ class Main
                 break
             end
         end
-        puts print_color "Thank you for playing Mastermind!",  @color_code['important_color']
+        puts print_color "Thank you for playing Mastermind!",  @configuration['color_code']['important_color']
         puts
     end
     def start_game
-        system "#{@clear_terminal}"
-        puts
+        clear_terminal
         new_game = true
         last_game = JSON.load File.open "./continue_game.json"
-        line = Array.new
+        lines = Array.new
         win = false
         lose = false
-        counter = 0
         unless last_game.length == 0
             possible_input = Array(1..2)
-            puts print_color "You did not finish your last game. Do you want to continue it now?", @color_code['standard_color']
-            puts print_color "Enter the number of the option you want to choose:", @color_code['standard_color']
+            puts print_color "You did not finish your last game. Do you want to continue it now?", @configuration['color_code']['standard_color']
+            puts print_color "Enter the number of the option you want to choose:", @configuration['color_code']['standard_color']
             puts
-            puts print_color "#{possible_input[0].to_s.ljust @configuration['preferences']['standard_length_of_options']}: Continue last game", @color_code['option_color']
-            puts print_color "#{possible_input[-1].to_s.ljust @configuration['preferences']['standard_length_of_options']}: Start new game", @color_code['option_color']
+            puts print_color "#{add_length "f", possible_input[0], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Continue last game", @configuration['color_code']['option_color']
+            puts print_color "#{add_length "f", possible_input[-1], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Start new game", @configuration['color_code']['option_color']
+            puts
             case get_user_input "i", possible_input
             when possible_input[0]
                 new_game = false
-            when possible_input[-1]
+            when possible_input[1]
                 new_game = true
             else
                 return
             end
         end
+        File.write "./continue_game.json", JSON.dump(Hash.new)
         if new_game
-            line = create_random_line
-            counter = 1
+            lines[0] = create_random_line
         else
-            line = last_game['line']
-            counter = last_game['counter']
+            lines = last_game.to_a
         end
-        loop do
-            guessed_line = line_input
-            show_line guessed_line, counter
-            counter += 1
-            if counter == @settings['number_of_attepmts']
-                lose = true
-            elsif guessed_line == line
-                win = true
+        output = Array.new
+        clear_terminal
+        output << ""
+        unless @settings['number_of_attempts'] == 0
+            output << (print_color "#{add_length "f", "", @configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+        else
+            output << (print_color "#{add_length "f", "", (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['standard_length'])}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+        end
+        @settings['number_of_elements'].times {|counter|
+            output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "m", counter.to_s, (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length'])}", @configuration['color_code']['standard_color'])
+        }
+        output << ""
+        unless @settings['number_of_attempts'] == 0
+            (@configuration['preferences']['signs']['horizontal_divider'].length + @configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length).times {
+                output[-1] += "#{@configuration['preferences']['signs']['vertical_divider']}"
+            }
+        else
+            (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['signs']['horizontal_divider'].length + @configuration['preferences']['standard_length']).times {
+                output[-1] += "#{@configuration['preferences']['signs']['vertical_divider']}"
+            }
+        end
+        @settings['number_of_elements'].times {
+            (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['signs']['horizontal_divider'].length + @configuration['preferences']['standard_length']).times {
+                output[-1] += "#{@configuration['preferences']['signs']['vertical_divider']}"
+            }
+        }
+        unless @settings['number_of_attempts'] == 0
+            output << (print_color "#{add_length "f", "", (@configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length)}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+        else
+            output << (print_color "#{add_length "f", "", (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['standard_length'])}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+        end
+        @settings['number_of_elements'].times {|counter|
+            output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "m", "", (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length'])}", @configuration['color_code']['standard_color'])
+        }
+        counter = 0
+        lines.each {|line|
+            unless counter == 0
+                line_array = (show_line line, lines.length)
+                line_array.each {|print_line|
+                    output << print_line
+                }
+                output << ""
+                @settings['number_of_elements'].times {|counter|
+                    output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "m", "", @configuration['preferences']['signs']['color_sign'].length}", @configuration['color_code']['standard_color'])
+                }
             end
-            break if win or lose
+        }
+        loop do
+            clear_terminal
+            if lines.length == @settings['number_of_attempts']
+                lose = true
+                break
+            end
+            puts output
+            puts
+            guessed_line = line_input
+            if guessed_line == nil
+                game = Hash.new
+                game['lines'] = lines
+                File.write "./continue_game.json", JSON.dump(lines)
+            else
+                line_array = (show_line guessed_line, lines.length)
+                line_array.each {|print_line|
+                    output << print_line
+                }
+                unless @settings['number_of_attempts'] == 0
+                    output << (print_color "#{add_length "f", "", (@configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length)}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+                else
+                    output << (print_color "#{add_length "f", "", (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['standard_length'])}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+                end
+                @settings['number_of_elements'].times {|counter|
+                    output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "f", "", (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length'])}", @configuration['color_code']['standard_color'])
+                }
+                if guessed_line == lines[0]
+                    win = true
+                    break
+                end
+            end
         end
     end
     def show_documentation
-        system "#{@clear_terminal}"
-        puts
+        clear_terminal
         documentation = File.read "./documentation.txt"
-        puts print_color documentation, @color_code['standard_color']
+        puts print_color documentation, @configuration['color_code']['standard_color']
         puts
-        puts print_color "Please press 'Enter' to leave documentation.", @color_code['standard_color']
+        puts print_color "Please press 'Enter' to leave documentation.", @configuration['color_code']['standard_color']
         get_user_input nil, nil
     end
     def open_settings
         settings = JSON.load File.open "./settings.json"
         loop do
-            system "#{@clear_terminal}"
-            puts
+            clear_terminal
             possible_input = Array(1..(settings.length + 2))
-            puts print_color "Please enter the number of the option you want to choose:", @color_code['standard_color']
+            puts print_color "Please enter the number of the option you want to choose:", @configuration['color_code']['standard_color']
             puts
-            puts print_color "Settings:",  @color_code['standard_color']
+            puts print_color "Settings:",  @configuration['color_code']['standard_color']
             puts
             counter = 0
             settings.each {|key, value|
-                puts print_color "#{possible_input[counter].to_s.ljust @configuration['preferences']['standard_length_of_options']}: #{(key.to_s.gsub "_", " ").ljust @configuration['preferences']['standard_length_of_settings']}-> #{value}", @color_code['option_color']
+                puts print_color "#{add_length "f", possible_input[counter], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: #{add_length "e", (key.to_s.gsub "_", " "), @configuration['preferences']['standard_length']}-> #{value}", @configuration['color_code']['option_color']
                 counter += 1
             }
             puts
-            puts print_color "#{possible_input[-2].to_s.ljust @configuration['preferences']['standard_length_of_options']}: Reset settings", @color_code['option_color']
-            puts print_color "#{possible_input[-1].to_s.ljust @configuration['preferences']['standard_length_of_options']}: Exit to menu", @color_code['option_color']
+            puts print_color "#{add_length "f", possible_input[-2], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Reset settings", @configuration['color_code']['option_color']
+            puts print_color "#{add_length "f", possible_input[-1], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Exit to menu", @configuration['color_code']['option_color']
             puts
             case get_user_input "i", possible_input
             when possible_input[0]
-                possilbe_number_of_colors = Array(@configuration['preferences']['minimal_number_of_elements']..@configuration['preferences']['maximal_number_of_elements'])
-                puts print_color "Please enter the number of colors you want to play with:",  @color_code['standard_color']
-                puts print_color "(You can choose any number between '#{possilbe_number_of_colors[0]}' and '#{possilbe_number_of_colors[-1]}'.)",  @color_code['standard_color']
-                settings['number_of_elements'] = get_user_input "i", possilbe_number_of_colors
+                possible_values_for_multiple_color_usage = Array[false, true]
+                puts print_color "Please enter whether you want multiple usage of one color in one line allowed or not:", @configuration['color_code']['standard_color']
+                puts print_color "(Choose 'true' for allowing the option or 'false' to deny.)", @configuration['color_code']['standard_color']
+                settings['double_colors'] = get_user_input "b", possible_values_for_multiple_color_usage
             when possible_input[1]
-                puts print_color "Please enter the number of attempts you want to have to guess the colors:",  @color_code['standard_color']
-                puts print_color "(Choose '0' for an endless amount of attempts.)",  @color_code['standard_color']
+                puts print_color "Please enter the number of attempts you want to have to guess the colors:",  @configuration['color_code']['standard_color']
+                puts print_color "(Choose '0' for an endless amount of attempts.)",  @configuration['color_code']['standard_color']
                 changed_number_of_attempts = get_user_input "i", nil
                 settings['number_of_attempts'] = changed_number_of_attempts
             when possible_input[2]
-                possible_values_for_multiple_color_usage = Array[false, true]
-                puts print_color "Please enter whether you want multiple usage of one color in one line allowed or not:", @color_code['standard_color']
-                puts print_color "(Choose 'true' for allowing the option or 'false' to deny.)", @color_code['standard_color']
-                settings['double_colors'] = get_user_input "b", possible_values_for_multiple_color_usage
+                possilbe_number_of_colors = Array(@configuration['preferences']['minimal_number_of_elements']..@configuration['preferences']['maximal_number_of_elements'])
+                puts print_color "Please enter the number of colors you want to play with:",  @configuration['color_code']['standard_color']
+                puts print_color "(You can choose any number between '#{possilbe_number_of_colors[0]}' and '#{possilbe_number_of_colors[-1]}'.)",  @configuration['color_code']['standard_color']
+                settings['number_of_elements'] = get_user_input "i", possilbe_number_of_colors
             when possible_input[-2]
                 settings = @configuration['standard_settings']
             when possible_input[-1]
@@ -174,32 +234,62 @@ class Main
         update_values
     end
     def show_line p_line, p_counter
-
+        line = Array.new
+        unless @settings['number_of_attempts'] == 0
+            line << (print_color "#{add_length "f", "#{p_counter}", (@configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length)}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+        else
+            line << (print_color "#{add_length "f", "#{p_counter}", (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['standard_length'])}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+        end
+        p_line.length.times {|counter|
+            line[-1] += print_color "#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color']
+            line[-1] += print_color "#{add_length "m", "#{@configuration['preferences']['signs']['color_sign']}", @configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length']}", p_line[counter]
+        }
+        line
+    end
+    def give_feedback p_line, p_guessed_line
+        
     end
     def line_input
-        
+        line = Array.new
+        @settings['number_of_elements'].times {|counter|
+            puts print_color "Please enter the #{counter + 1}. color:", @configuration['color_code']['standard_color']
+            print print_color "(You can choose from following colors: ", @configuration['color_code']['standard_colors']
+            (@configuration['all_colors'].length - 1).times {|counter|
+                print print_color "#{@configuration['all_colors'][counter]}", @configuration['all_colors'][counter]
+                print print_color ", ", @configuration['color_code']['standard_color']
+            }
+            print print_color "#{@configuration['all_colors'][-1]}", @configuration['all_colors'][-1]
+            puts print_color ")", @configuration['color_code']['standard_color']
+            line << (get_user_input "s", @configuration['all_colors'])
+            if line[-1] == nil
+                return nil
+            end
+        }
+        line
     end
     def create_random_line
         line = Array.new
         @settings['number_of_elements'].times {|counter|
-            double_colors = false
+            new_color = ""
             loop do
-                line << @colors[rand(@configuration['all_colors'].length)]
+                double_colors = false
+                new_color = @configuration['all_colors'][rand(@configuration['all_colors'].length)]
                 unless @settings['double_colors']
                     index = 0
                     line.each {|color|
                         unless index == counter
-                            if color == line[counter]
+                            if color == new_color
                                 double_colors = true
                             end
                         end
                         index += 1
                     }
-                    break if not double_colors
+                    break unless double_colors
                 else
                     break
                 end
             end
+            line << new_color
         }
         line
     end
@@ -208,17 +298,17 @@ class Main
     end
     def print_color p_text, p_color
         case p_color
-        when "black"
+        when @configuration['all_colors'][0]
             return p_text.black
-        when "blue"
+        when @configuration['all_colors'][1]
             return p_text.blue
-        when "green"
+        when @configuration['all_colors'][2]
             return p_text.green
-        when "red"
+        when @configuration['all_colors'][3]
             return p_text.red
-        when "white"
+        when @configuration['all_colors'][4]
             return p_text.white
-        when "yellow"
+        when @configuration['all_colors'][5]
             return p_text.yellow
         else
             return p_text
@@ -248,7 +338,7 @@ class Main
                 end
             end
             unless p_expectations == nil
-                p_expectations.each { |expectation|
+                p_expectations.each {|expectation|
                     if value[-1] == expectation
                         revision = true
                         break
@@ -258,10 +348,32 @@ class Main
                 break
             end
             break if revision
-            puts print_color "Please enter a valid input.", @color_code['error_color']
+            puts print_color "Please enter a valid input.", @configuration['color_code']['error_color']
         end
         puts
         value[-1]
+    end
+    def add_length p_placement, p_text, p_length
+        text = ""
+        text_length = p_text.to_s.length
+        difference = 0
+        if p_placement == "front" or p_placement == "f"
+            difference = p_length - text_length
+        elsif p_placement == "mid" or p_placement == "m"
+            difference = ((p_length - text_length) / 2).to_i
+        elsif p_placement == "end" or p_placement == "e"
+            difference = 0
+        end
+        difference.times {
+            text += " "
+        }
+        text += p_text.to_s
+        text = text.ljust p_length
+        text
+    end
+    def clear_terminal
+        system "#{@clear_terminal}"
+        puts
     end
     def get_os
         if OS.windows?
