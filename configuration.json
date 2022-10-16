@@ -1,5 +1,4 @@
 {
-  "all_colors": ["black", "blue", "green", "red", "white", "yellow"],
   "color_code": {
     "error_color": "red",
     "important_color": "blue",

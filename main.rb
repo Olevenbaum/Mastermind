@@ -39,6 +39,7 @@ class Main
     end
     def main
         clear_terminal
+        #test_program
         show_menu
     end
     def show_menu
@@ -296,13 +297,13 @@ class Main
         @settings['number_of_elements'].times do |counter|
             puts print_color "Please enter the #{counter + 1}. color:", @configuration['color_code']['standard_color']
             print print_color "(You can choose from following colors: ", @configuration['color_code']['standard_color']
-            (@configuration['all_colors'].length - 1).times do |index|
-                print print_color "#{@configuration['all_colors'][index]}", @configuration['all_colors'][index]
+            (String.length - 1).times do |index|
+                print print_color "#{String.colors[index]}", String.colors[index]
                 print print_color ", ", @configuration['color_code']['standard_color']
             end
-            print print_color "#{@configuration['all_colors'][-1]}", @configuration['all_colors'][-1]
+            print print_color "#{String.colors[-1]}", String.colors[-1]
             puts print_color ")", @configuration['color_code']['standard_color']
-            line << (get_user_input "s", @configuration['all_colors'])
+            line << (get_user_input "s", String.colors)
             if line[-1] == nil
                 return nil
             end
@@ -315,7 +316,7 @@ class Main
             new_color = ""
             loop do
                 double_colors = false
-                new_color = @configuration['all_colors'][rand(@configuration['all_colors'].length)]
+                new_color = String.colors[rand(String.colors.length)]
                 if @settings['double_colors']
                     break
                 else
@@ -422,6 +423,11 @@ class Main
         end
         clear_command
     end
+end
+
+def test_program
+    puts String.colors
+    get_user_input nil, nil
 end
 
 Main.new.main
