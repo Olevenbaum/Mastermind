@@ -4,7 +4,7 @@
     "error_color": "red",
     "important_color": "blue",
     "option_color": "green",
-    "right_color_color": "black",
+    "right_color": "black",
     "right_position_color": "white",
     "standard_color": "white"
   },
@@ -14,6 +14,7 @@
     "minimal_number_of_elements": 3,
     "signs": {
       "color_sign": "███",
+      "feedback_sign": "█",
       "horizontal_divider": "|",
       "vertical_divider": "="
     },

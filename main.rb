@@ -73,11 +73,11 @@ class Main
     def start_game
         clear_terminal
         new_game = true
-        last_game = JSON.load File.open "./continue_game.json"
+        last_game = (JSON.load File.open "./continue_game.json").to_a
         lines = Array.new
         win = false
-        lose = false
         unless last_game.length == 0
+            File.write "./continue_game.json", JSON.dump(Hash.new)
             possible_input = Array(1..2)
             puts print_color "You did not finish your last game. Do you want to continue it now?", @configuration['color_code']['standard_color']
             puts print_color "Enter the number of the option you want to choose:", @configuration['color_code']['standard_color']
@@ -94,11 +94,10 @@ class Main
                 return
             end
         end
-        File.write "./continue_game.json", JSON.dump(Hash.new)
         if new_game
-            lines[0] = create_random_line
+            lines << [create_random_line, nil]
         else
-            lines = last_game.to_a
+            lines = last_game
         end
         output = Array.new
         clear_terminal
@@ -108,49 +107,47 @@ class Main
         else
             output << (print_color "#{add_length "f", "", (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['standard_length'])}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
         end
-        @settings['number_of_elements'].times {|counter|
-            output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "m", counter.to_s, (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length'])}", @configuration['color_code']['standard_color'])
-        }
+        @settings['number_of_elements'].times do |counter|
+            output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "m", counter, (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length'])}", @configuration['color_code']['standard_color'])
+        end
+        output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "m", "Feedback", (@settings['number_of_elements'] * (@configuration['preferences']['signs']['feedback_sign'].length + 1))}", @configuration['color_code']['standard_color'])
         output << ""
         unless @settings['number_of_attempts'] == 0
-            (@configuration['preferences']['signs']['horizontal_divider'].length + @configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length).times {
-                output[-1] += "#{@configuration['preferences']['signs']['vertical_divider']}"
-            }
+            (@configuration['preferences']['signs']['horizontal_divider'].length + @configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length).times do 
+                output[-1] += (print_color "#{@configuration['preferences']['signs']['vertical_divider']}", @configuration['color_code']['standard_color'])
+            end
         else
-            (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['signs']['horizontal_divider'].length + @configuration['preferences']['standard_length']).times {
-                output[-1] += "#{@configuration['preferences']['signs']['vertical_divider']}"
-            }
+            (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['signs']['horizontal_divider'].length + @configuration['preferences']['standard_length']).times do
+                output[-1] += (print_color "#{@configuration['preferences']['signs']['vertical_divider']}", @configuration['color_code']['standard_color'])
+            end
         end
-        @settings['number_of_elements'].times {
-            (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['signs']['horizontal_divider'].length + @configuration['preferences']['standard_length']).times {
-                output[-1] += "#{@configuration['preferences']['signs']['vertical_divider']}"
-            }
-        }
+        @settings['number_of_elements'].times do
+            (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['signs']['horizontal_divider'].length + @configuration['preferences']['standard_length']).times do
+                output[-1] += (print_color "#{@configuration['preferences']['signs']['vertical_divider']}", @configuration['color_code']['standard_color'])
+            end
+        end
+        (@settings['number_of_elements'] * (@configuration['preferences']['signs']['feedback_sign'].length + 1) + @configuration['preferences']['signs']['horizontal_divider'].length + 1).times do
+            output[-1] += (print_color "#{@configuration['preferences']['signs']['vertical_divider']}", @configuration['color_code']['standard_color'])
+        end
         unless @settings['number_of_attempts'] == 0
             output << (print_color "#{add_length "f", "", (@configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length)}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
         else
             output << (print_color "#{add_length "f", "", (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['standard_length'])}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
         end
-        @settings['number_of_elements'].times {|counter|
+        @settings['number_of_elements'].times do |counter|
             output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "m", "", (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length'])}", @configuration['color_code']['standard_color'])
-        }
-        counter = 0
-        lines.each {|line|
-            unless counter == 0
-                line_array = (show_line line, lines.length)
-                line_array.each {|print_line|
-                    output << print_line
-                }
-                output << ""
-                @settings['number_of_elements'].times {|counter|
-                    output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "m", "", @configuration['preferences']['signs']['color_sign'].length}", @configuration['color_code']['standard_color'])
-                }
+        end
+        output[-1] += (print_color "#{@configuration['peferences']['signs']['horizontal_divider']} #{add_length "e", "", (@settings['number_of_elements'] * (@configuration['preferences']['signs']['feedback_sign'].length + 1))}", @configuration['color_code']['standard_color'])
+        lines.each_with_index do |line, index|
+            unless line == nil
+                unless index == 0
+                    output.concat(show_line line, index)
+                end
             end
-        }
+        end
         loop do
             clear_terminal
             if lines.length == @settings['number_of_attempts']
-                lose = true
                 break
             end
             puts output
@@ -160,25 +157,21 @@ class Main
                 game = Hash.new
                 game['lines'] = lines
                 File.write "./continue_game.json", JSON.dump(lines)
+                return
             else
-                line_array = (show_line guessed_line, lines.length)
-                line_array.each {|print_line|
-                    output << print_line
-                }
-                unless @settings['number_of_attempts'] == 0
-                    output << (print_color "#{add_length "f", "", (@configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length)}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
-                else
-                    output << (print_color "#{add_length "f", "", (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['standard_length'])}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
-                end
-                @settings['number_of_elements'].times {|counter|
-                    output[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "f", "", (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length'])}", @configuration['color_code']['standard_color'])
-                }
-                if guessed_line == lines[0]
+                lines << [guessed_line, (give_feedback lines[0][0], guessed_line)]
+                output.concat(show_line lines[-1], lines.length - 1)
+                if lines[-1] == lines[0]
                     win = true
                     break
                 end
             end
         end
+       if win
+        
+       elsif not win
+        
+       end
     end
     def show_documentation
         clear_terminal
@@ -197,11 +190,9 @@ class Main
             puts
             puts print_color "Settings:",  @configuration['color_code']['standard_color']
             puts
-            counter = 0
-            settings.each {|key, value|
-                puts print_color "#{add_length "f", possible_input[counter], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: #{add_length "e", (key.to_s.gsub "_", " "), @configuration['preferences']['standard_length']}-> #{value}", @configuration['color_code']['option_color']
-                counter += 1
-            }
+            settings.each_with_index do |key, value, index|
+                puts print_color "#{add_length "f", possible_input[index], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: #{add_length "e", (key.to_s.gsub "_", " "), @configuration['preferences']['standard_length']}-> #{value}", @configuration['color_code']['option_color']
+            end
             puts
             puts print_color "#{add_length "f", possible_input[-2], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Reset settings", @configuration['color_code']['option_color']
             puts print_color "#{add_length "f", possible_input[-1], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Exit to menu", @configuration['color_code']['option_color']
@@ -240,57 +231,90 @@ class Main
         else
             line << (print_color "#{add_length "f", "#{p_counter}", (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['standard_length'])}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
         end
-        p_line.length.times {|counter|
-            line[-1] += print_color "#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color']
-            line[-1] += print_color "#{add_length "m", "#{@configuration['preferences']['signs']['color_sign']}", @configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length']}", p_line[counter]
-        }
+        p_line[0].each do |color|
+            line[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+            line[-1] += (print_color "#{add_length "m", "#{@configuration['preferences']['signs']['color_sign']}", @configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length']}", color)
+        end
+        line[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']} ", @configuration['color_code']['standard_color'])
+        p_line[-1].each do |feedback|
+            unless feedback == nil
+                if feedback
+                    line[-1]+= (print_color "#{@configuration['preferences']['signs']['feedback_sign']} ", @configuration['color_code']['right_position_color'])
+                else
+                    line[-1]+= (print_color "#{@configuration['preferences']['signs']['feedback_sign']} ", @configuration['color_code']['right_color'])
+                end
+            else
+                line[-1] += (print_color "  ", @configuration['color_code']['standard_color'])
+            end
+        end
+        unless @settings['number_of_attempts'] == 0
+            line << (print_color "#{add_length "f", "", (@configuration['preferences']['standard_length'] + @settings['number_of_attempts'].to_s.length)}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+        else
+            line << (print_color "#{add_length "f", "", (@configuration['preferences']['length_if_endless_attempts'] + @configuration['preferences']['standard_length'])}#{@configuration['preferences']['signs']['horizontal_divider']}", @configuration['color_code']['standard_color'])
+        end
+        @settings['number_of_elements'].times do |counter|
+            line[-1] += (print_color "#{@configuration['preferences']['signs']['horizontal_divider']}#{add_length "f", "", (@configuration['preferences']['signs']['color_sign'].length + @configuration['preferences']['standard_length'])}", @configuration['color_code']['standard_color'])
+        end
+        line[-1] += (print_color "#{@configuration['peferences']['signs']['horizontal_divider']} #{add_length "e", "", (@settings['number_of_elements'] * (@configuration['preferences']['signs']['feedback_sign'].length + 1))}", @configuration['color_code']['standard_color'])
         line
     end
     def give_feedback p_line, p_guessed_line
-        
+        feedback = Array.new
+        p_guessed_line.each_with_index do |guessed_color, index|
+            if guessed_color == p_line[index]
+                feedback << true
+            else
+                p_line.each do |color|
+                    if guessed_color == color
+                        feedback << false
+                    else
+                        feedback << nil
+                    end
+                end
+            end
+        end
+        feedback
     end
     def line_input
         line = Array.new
-        @settings['number_of_elements'].times {|counter|
+        @settings['number_of_elements'].times do |counter|
             puts print_color "Please enter the #{counter + 1}. color:", @configuration['color_code']['standard_color']
             print print_color "(You can choose from following colors: ", @configuration['color_code']['standard_colors']
-            (@configuration['all_colors'].length - 1).times {|counter|
+            (@configuration['all_colors'].length - 1).times do |counter|
                 print print_color "#{@configuration['all_colors'][counter]}", @configuration['all_colors'][counter]
                 print print_color ", ", @configuration['color_code']['standard_color']
-            }
+            end
             print print_color "#{@configuration['all_colors'][-1]}", @configuration['all_colors'][-1]
             puts print_color ")", @configuration['color_code']['standard_color']
             line << (get_user_input "s", @configuration['all_colors'])
             if line[-1] == nil
                 return nil
             end
-        }
+        end
         line
     end
     def create_random_line
         line = Array.new
-        @settings['number_of_elements'].times {|counter|
+        @settings['number_of_elements'].times do |counter|
             new_color = ""
             loop do
                 double_colors = false
                 new_color = @configuration['all_colors'][rand(@configuration['all_colors'].length)]
                 unless @settings['double_colors']
-                    index = 0
-                    line.each {|color|
+                    line.each do |color, index|
                         unless index == counter
                             if color == new_color
                                 double_colors = true
                             end
                         end
-                        index += 1
-                    }
+                    end
                     break unless double_colors
                 else
                     break
                 end
             end
             line << new_color
-        }
+        end
         line
     end
     def update_values
@@ -338,12 +362,12 @@ class Main
                 end
             end
             unless p_expectations == nil
-                p_expectations.each {|expectation|
+                p_expectations.each do |expectation|
                     if value[-1] == expectation
                         revision = true
                         break
                     end
-                }
+                end
             else
                 break
             end
@@ -364,9 +388,9 @@ class Main
         elsif p_placement == "end" or p_placement == "e"
             difference = 0
         end
-        difference.times {
+        difference.times do
             text += " "
-        }
+        end
         text += p_text.to_s
         text = text.ljust p_length
         text
