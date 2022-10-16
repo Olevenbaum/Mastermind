@@ -99,8 +99,6 @@ class Main
         else
             lines = last_game
         end
-        puts lines[0]['line']
-        sleep 10
         output = Array.new
         clear_terminal
         output << ""
@@ -188,8 +186,10 @@ class Main
             puts
             puts print_color "Settings:",  @configuration['color_code']['standard_color']
             puts
-            settings.each_with_index do |key, value, index|
-                puts print_color "#{add_length "f", possible_input[index], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: #{add_length "e", (key.to_s.gsub "_", " "), @configuration['preferences']['standard_length']}-> #{value}", @configuration['color_code']['option_color']
+            counter = 0
+            settings.each_with_index do |key, value|
+                puts print_color "#{add_length "f", possible_input[counter], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: #{add_length "e", (key.to_s.gsub "_", " "), @configuration['preferences']['standard_length']}-> #{value}", @configuration['color_code']['option_color']
+                counter += 1
             end
             puts
             puts print_color "#{add_length "f", possible_input[-2], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: Reset settings", @configuration['color_code']['option_color']
@@ -262,13 +262,14 @@ class Main
             if guessed_color == p_line[index]
                 feedback << true
             else
+                temporary_feedback = nil
                 p_line.each do |color|
                     if guessed_color == color
-                        feedback << false
-                    else
-                        feedback << nil
+                        temporary_feedback == false
+                        break
                     end
                 end
+                temporary_feedback << feedback
             end
         end
         feedback
