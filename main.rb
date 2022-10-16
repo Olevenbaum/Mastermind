@@ -269,7 +269,7 @@ class Main
                         break
                     end
                 end
-                temporary_feedback << feedback
+                feedback << temporary_feedback
             end
         end
         feedback
