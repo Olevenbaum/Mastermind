@@ -157,17 +157,27 @@ class Main
             else
                 lines << Hash['feedback' => (give_feedback lines[0]['line'], guessed_line), 'line' => guessed_line]
                 output.concat(show_line lines[-1], lines.length - 1)
-                if lines[-1] == lines[0]
+                if lines[-1]['line'] == lines[0]['line']
                     win = true
                     break
                 end
             end
         end
-       if win
-        
-       elsif not win
-        
-       end
+        clear_terminal
+        puts output
+        puts
+        if win
+            @configuration['game_end_text']['win_text'].each do |line|
+                puts print_color line, @configuration['color_code']['important_color']
+            end
+        elsif not win
+            @configuration['game_end_text']['defeat_text'].each do |line|
+                puts print_color line, @configuration['color_code']['important_color']
+            end
+        end
+        puts
+        puts print_color "Please press 'Enter' to return to the menu.", @configuration['color_code']['standard_color']
+        get_user_input nil, nil
     end
     def show_documentation
         clear_terminal
@@ -197,10 +207,9 @@ class Main
             puts
             case get_user_input "i", possible_input
             when possible_input[0]
-                possible_values_for_multiple_color_usage = Array[false, true]
                 puts print_color "Please enter whether you want multiple usage of one color in one line allowed or not:", @configuration['color_code']['standard_color']
                 puts print_color "(Choose 'true' for allowing the option or 'false' to deny.)", @configuration['color_code']['standard_color']
-                settings['double_colors'] = get_user_input "b", possible_values_for_multiple_color_usage
+                settings['double_colors'] = get_user_input "b", nil
             when possible_input[1]
                 puts print_color "Please enter the number of attempts you want to have to guess the colors:",  @configuration['color_code']['standard_color']
                 puts print_color "(Choose '0' for an endless amount of attempts.)",  @configuration['color_code']['standard_color']
@@ -258,19 +267,27 @@ class Main
     end
     def give_feedback p_line, p_guessed_line
         feedback = Array.new
+        right_position_counter = 0
+        right_color_counter = 0
         p_guessed_line.each_with_index do |guessed_color, index|
             if guessed_color == p_line[index]
-                feedback << true
+                right_position_counter += 1
             else
-                temporary_feedback = nil
                 p_line.each do |color|
                     if guessed_color == color
-                        temporary_feedback == false
-                        break
+                        right_color_counter += 1
                     end
                 end
-                feedback << temporary_feedback
             end
+        end
+        right_position_counter.times do
+            feedback << true
+        end
+        right_color_counter.times do
+            feedback << false
+        end
+        (@settings['number_of_elements'] - (right_color_counter + right_position_counter)).times do
+            feedback << nil
         end
         feedback
     end
@@ -280,8 +297,8 @@ class Main
             puts print_color "Please enter the #{counter + 1}. color:", @configuration['color_code']['standard_color']
             print print_color "(You can choose from following colors: ", @configuration['color_code']['standard_color']
             (@configuration['all_colors'].length - 1).times do |index|
-                print (print_color "#{@configuration['all_colors'][index]}", @configuration['all_colors'][index])
-                print (print_color ", ", @configuration['color_code']['standard_color'])
+                print print_color "#{@configuration['all_colors'][index]}", @configuration['all_colors'][index]
+                print print_color ", ", @configuration['color_code']['standard_color']
             end
             print print_color "#{@configuration['all_colors'][-1]}", @configuration['all_colors'][-1]
             puts print_color ")", @configuration['color_code']['standard_color']
