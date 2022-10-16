@@ -187,7 +187,7 @@ class Main
             puts print_color "Settings:",  @configuration['color_code']['standard_color']
             puts
             counter = 0
-            settings.each_with_index do |key, value|
+            settings.each do |key, value|
                 puts print_color "#{add_length "f", possible_input[counter], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: #{add_length "e", (key.to_s.gsub "_", " "), @configuration['preferences']['standard_length']}-> #{value}", @configuration['color_code']['option_color']
                 counter += 1
             end
