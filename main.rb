@@ -39,7 +39,7 @@ class Main
     end
     def main
         clear_terminal
-        #test_program
+        test_program
         show_menu
     end
     def show_menu
@@ -199,7 +199,7 @@ class Main
             puts
             counter = 0
             settings.each do |key, value|
-                puts print_color "#{add_length "f", possible_input[counter], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: #{add_length "e", (key.to_s.gsub "_", " "), @configuration['preferences']['standard_length']}-> #{value}", @configuration['color_code']['option_color']
+                puts print_color "#{add_length "f", possible_input[counter], (@configuration['preferences']['standard_length'] + possible_input[-1].to_s.length)}: #{add_length "e", (key.capitalise.to_s.gsub "_", " "), @configuration['preferences']['standard_length']}-> #{value}", @configuration['color_code']['option_color']
                 counter += 1
             end
             puts
@@ -293,17 +293,21 @@ class Main
         feedback
     end
     def line_input
+        colors = String.colors.reject do
+            |color| color.to_s.include? "black" or color.to_s.include? "white" or color == "default"
+        end
         line = Array.new
         @settings['number_of_elements'].times do |counter|
             puts print_color "Please enter the #{counter + 1}. color:", @configuration['color_code']['standard_color']
             print print_color "(You can choose from following colors: ", @configuration['color_code']['standard_color']
-            (String.length - 1).times do |index|
-                print print_color "#{String.colors[index]}", String.colors[index]
-                print print_color ", ", @configuration['color_code']['standard_color']
+            (colors.length - 1).times do |index|
+                print print_color "#{colors[index]}", colors[index]
+                unless index == colors.length - 1
+                    print print_color ", ", @configuration['color_code']['standard_color']
+                end
             end
-            print print_color "#{String.colors[-1]}", String.colors[-1]
             puts print_color ")", @configuration['color_code']['standard_color']
-            line << (get_user_input "s", String.colors)
+            line << (get_user_input "s", colors)
             if line[-1] == nil
                 return nil
             end
@@ -312,14 +316,15 @@ class Main
     end
     def create_random_line
         line = Array.new
+        colors = String.colors.reject do
+            |color| color.to_s.include? "black" or color.to_s.include? "white" or color == "default"
+        end
         @settings['number_of_elements'].times do |counter|
             new_color = ""
             loop do
                 double_colors = false
-                new_color = String.colors[rand(String.colors.length)]
-                if @settings['double_colors']
-                    break
-                else
+                new_color = colors[rand colors.length]
+                unless @settings['double_colors']
                     line.each do |color, index|
                         unless index == counter
                             if color == new_color
@@ -338,18 +343,21 @@ class Main
         @settings = JSON.load File.open "./settings.json"
     end
     def print_color p_text, p_color
+        colors = String.colors.reject do
+            |color| color.to_s.include? "black" or color.to_s.include? "white" or color == "default"
+        end
         case p_color
-        when @configuration['all_colors'][0]
+        when colors[0]
             return p_text.black
-        when @configuration['all_colors'][1]
+        when colors[1]
             return p_text.blue
-        when @configuration['all_colors'][2]
+        when colors[2]
             return p_text.green
-        when @configuration['all_colors'][3]
+        when colors[3]
             return p_text.red
-        when @configuration['all_colors'][4]
+        when colors[4]
             return p_text.white
-        when @configuration['all_colors'][5]
+        when colors[5]
             return p_text.yellow
         else
             return p_text
